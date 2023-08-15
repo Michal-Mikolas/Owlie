@@ -22,12 +22,6 @@ var owlie_erasmusMatchBuddies = {
       [Model.getData('Buddy')]
     );
 
-    var ruleRows00 = Model.getData('Erasmus: Match buddies', 9, 1);
-    var ruleRows0 = Model.sql(
-      'SELECT * FROM ?',
-      [Model.getData('Erasmus: Match buddies', 9, 1)]
-    );
-
     var ruleRows = Model.sql(
       'SELECT rule.* FROM ? AS rule WHERE Active = "Yes"',
       [Model.getData('Erasmus: Match buddies', 9, 1)]
@@ -44,12 +38,17 @@ var owlie_erasmusMatchBuddies = {
 
       erasmusRow['_buddies'] = [];
 
-      // And each buddy...
-      for (let j in buddyRows) {
-        var buddyRow = buddyRows[j];
+      // Skip if already has buddy
+      if (owlie_erasmusMatchBuddies.hasBuddy(erasmusRow)) {
+        i++; continue;
+      }
 
-        var erasmusRowsSimulation = owlie_erasmusMatchBuddies.simulateBuddy(erasmusRows, j, buddyRow);
-        buddyRow['_score'] = owlie_erasmusMatchBuddies.calculateBuddyScore(erasmusRowsSimulation, j, ruleRows);
+      // And for each buddy...
+      for (let j in buddyRows) {
+        var erasmusRowsSimulation = owlie_erasmusMatchBuddies.simulateBuddy(erasmusRows, i, buddyRows[j]);
+        owlie_erasmusMatchBuddies.calculateBuddyScore(erasmusRowsSimulation, i, ruleRows);
+
+        var buddyRow = erasmusRowsSimulation[i]['_buddy'];
 
         erasmusRow['_buddies'].push(buddyRow);
       }
@@ -64,7 +63,8 @@ var owlie_erasmusMatchBuddies = {
       // Write into sheet
       erasmusRow['Buddy e-mail'] = erasmusRow['_buddy']['E-mail'];  // TODO settings['Fill buddy info (from -> to; ...)']
       erasmusRow['Buddy score'] = erasmusRow['_buddy']['_score'];
-      Model.saveRow(erasmusRow);
+      erasmusRow['Buddy explanation'] = erasmusRow['_buddy']['_explanation'];
+      Model.saveData(erasmusRows);
 
       i++;
     } while (i < erasmusRows.length);
@@ -119,7 +119,8 @@ var owlie_erasmusMatchBuddies = {
     });
 
     // 2) CALCULATE SCORE
-    var score = 0;
+    buddyRow['_score'] = 0;
+    buddyRow['_explanation'] = '';
     for (let j in ruleRows) {
       // Prepare code
       var ruleRow = ruleRows[j];
@@ -135,12 +136,17 @@ var owlie_erasmusMatchBuddies = {
       var results = Model.sql('SELECT ' + code);
       var firstResultValue = Object.values(results[0])[0];  // first value of the first result
       if (firstResultValue) {
-        score += ruleRow['Score'];
+        buddyRow['_score'] += ruleRow['Score'];
+        buddyRow['_explanation'] += ruleRow['Description'] + ' [' + ruleRow['Score'] + ']; ';
       }
     }
+  },
 
-    // 3) FINISH
-    return score;
+  /**
+   *
+   */
+  hasBuddy: function(erasmusRow) {
+    return erasmusRow['Buddy e-mail'];  // TODO settings['Fill buddy info (from -> to; ...)']
   },
 
 }

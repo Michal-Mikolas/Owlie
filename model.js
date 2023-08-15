@@ -69,7 +69,7 @@ var Model = {
     // 3) INTERNAL VALUES (for later saving with `Model.saveData()`)
     for (let i in result) {
       result[i]['__sheetName'] = sheetName;
-      result[i]['__row'] = i + firstRow;
+      result[i]['__row'] = i*1 + firstRow + 1;  // +1 because of header row
       result[i]['__columnsMap'] = Model._buildColumnsMap(data, firstColumn);
       result[i]['__originalValues'] = Model._cloneRowValues(result[i]);
     }
@@ -100,7 +100,7 @@ var Model = {
       }
 
       // Skip values that didn't change
-      if (value == row['__originalValues'][column]) {
+      if (JSON.stringify(value) == JSON.stringify(row['__originalValues'][column])) {
         continue;
       }
 
@@ -189,7 +189,7 @@ var Model = {
     var columnsMap = {};
 
     for (let i in data[0]) {
-      columnsMap[data[0][i]] = i + firstColumn;
+      columnsMap[data[0][i]] = i*1 + firstColumn;
     }
 
     return columnsMap;
