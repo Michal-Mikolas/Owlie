@@ -45,7 +45,7 @@ var owlie_erasmusMatchBuddies = {
 
       // And for each buddy...
       for (let j in buddyRows) {
-        var erasmusRowsSimulation = owlie_erasmusMatchBuddies.simulateBuddy(erasmusRows, i, buddyRows[j]);
+        var erasmusRowsSimulation = owlie_erasmusMatchBuddies.assignBuddy(erasmusRows, i, buddyRows[j]);
         owlie_erasmusMatchBuddies.calculateBuddyScore(erasmusRowsSimulation, i, ruleRows);
 
         var buddyRow = erasmusRowsSimulation[i]['_buddy'];
@@ -54,16 +54,14 @@ var owlie_erasmusMatchBuddies = {
       }
 
       // Find the best match <3
-      if (!erasmusRow['_buddy']) {  // buddy can be already assigned because of groups
-        erasmusRow['_buddy'] = erasmusRow['_buddies'].reduce(function(prev, current) {
-          return (prev['_score'] > current['_score']) ? prev : current
-        })
-      }
+      var bestBuddy = erasmusRow['_buddies'].reduce(function(prev, current) {
+        return (prev['_score'] > current['_score']) ? prev : current
+      })
+
+      // Assign the best match to the buddy
+      erasmusRows = owlie_erasmusMatchBuddies.assignBuddy(erasmusRows, i, bestBuddy);
 
       // Write into sheet
-      erasmusRow['Buddy e-mail'] = erasmusRow['_buddy']['E-mail'];  // TODO settings['Fill buddy info (from -> to; ...)']
-      erasmusRow['Buddy score'] = erasmusRow['_buddy']['_score'];
-      erasmusRow['Buddy explanation'] = erasmusRow['_buddy']['_explanation'];
       Model.saveData(erasmusRows);
 
       i++;
@@ -83,26 +81,37 @@ var owlie_erasmusMatchBuddies = {
   /**
    * Tries to assign buddy to erasmus & his group. Doesn't calculate the score.
    */
-  simulateBuddy: function(erasmusRows, i, buddyRow) {
+  assignBuddy: function(erasmusRows, i, buddyRow) {
     // Clone data
     erasmusRows = JSON.parse(JSON.stringify(erasmusRows));
 
     // Assign buddy
     var erasmusRow = erasmusRows[i];
-    erasmusRow['_buddy'] = buddyRow;
+    owlie_erasmusMatchBuddies.assignBuddyData(erasmusRow, buddyRow);
 
     // Groups?
     if (erasmusRow['Group']) {  // TODO settings['Group column']
       for (let j in erasmusRows) {
         var otherErasmus = erasmusRows[j];
-        if (otherErasmus['Group'] == erasmusRow['Group']) {
-          otherErasmus['_buddy'] = erasmusRow['_buddy'];
+        if (otherErasmus['Group'] == erasmusRow['Group'] && (i != j)) {
+          owlie_erasmusMatchBuddies.assignBuddyData(otherErasmus, buddyRow);
         }
       }
     }
 
     // Finish
     return erasmusRows;
+  },
+
+  /**
+   * Fills buddy data into erasmus row
+   */
+  assignBuddyData: function(erasmusRow, buddyRow) {
+    erasmusRow['_buddy'] = buddyRow;
+
+    erasmusRow['Buddy e-mail'] = buddyRow['E-mail'];  // TODO settings['Fill buddy info (from -> to; ...)']
+    erasmusRow['Buddy score'] = buddyRow['_score'];
+    erasmusRow['Buddy explanation'] = buddyRow['_explanation'];
   },
 
   /**

@@ -71,7 +71,7 @@ var Model = {
       result[i]['__sheetName'] = sheetName;
       result[i]['__row'] = i*1 + firstRow + 1;  // +1 because of header row
       result[i]['__columnsMap'] = Model._buildColumnsMap(data, firstColumn);
-      result[i]['__originalValues'] = Model._cloneRowValues(result[i]);
+      result[i]['__savedValues'] = Model._cloneRowValues(result[i]);
     }
 
     // 4) FINISH
@@ -100,7 +100,7 @@ var Model = {
       }
 
       // Skip values that didn't change
-      if (JSON.stringify(value) == JSON.stringify(row['__originalValues'][column])) {
+      if (JSON.stringify(value) == JSON.stringify(row['__savedValues'][column])) {
         continue;
       }
 
@@ -114,7 +114,11 @@ var Model = {
       var sheet = spreadsheet.getSheetByName(row['__sheetName']);
       var cell = sheet.getRange(row['__row'], row['__columnsMap'][column]);
       cell.setValue(value);
+
     }
+
+    // Store saved values for later saving optimization
+    row['__savedValues'] = Model._cloneRowValues(row);
   },
 
   /**
