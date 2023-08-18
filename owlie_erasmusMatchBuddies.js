@@ -91,9 +91,11 @@ var owlie_erasmusMatchBuddies = {
 
     // Groups?
     if (erasmusRow['Group']) {  // TODO settings['Group column']
+      /**/console.log('Group (' + erasmusRow['E-mail'] + '): ' + erasmusRow['Group']);
       for (let j in erasmusRows) {
         var otherErasmus = erasmusRows[j];
         if (otherErasmus['Group'] == erasmusRow['Group'] && (i != j)) {
+          /**/console.log(erasmusRow['E-mail'] + ' <- ' + otherErasmus['E-mail']);
           owlie_erasmusMatchBuddies.assignBuddyData(otherErasmus, buddyRow);
         }
       }
