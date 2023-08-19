@@ -79,6 +79,39 @@ var Model = {
   },
 
   /**
+   *
+   */
+  getPairs: function(sheetName, firstRow=1, firstColumn=1, numRows=null) {
+    // 1) READ DATA
+    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = spreadsheet.getSheetByName(sheetName);
+
+    // using `getRange`
+    if (numRows && numColumns) {
+      var range = sheet.getRange(firstRow, firstColumn, numRows, 2);
+      var data = range.getValues();
+
+    // using `getDataRange`
+    } else {
+      var range = sheet.getDataRange();
+      var data = range.getValues();
+
+      if (firstRow > 1) {
+        data = data.slice(firstRow - 1);
+      }
+      if (firstColumn > 1) {
+        data = data.map(r => r.slice(firstColumn - 1));
+      }
+    }
+
+    // 2) TRANSFORM DATA
+    var result = Model._headerColumnToKeys(data);
+
+    // 3) FINISH
+    return result;
+  },
+
+  /**
    * Saves the data back to the sheet. Efficiently writes only data that changed.
    */
   saveData: function(data) {
@@ -176,6 +209,29 @@ var Model = {
         obj[data[0][j]] = data[i][j];
       }
       result.push(obj);
+    }
+
+    return result;
+  },
+
+  /**
+   * Converts this: [
+   *   [Name, John],
+   *   [Surname, Doe],
+   *   [Age, 37]
+   * ]
+   *
+   * Into this: {
+   *  Name: 'John',
+   *  Surname: 'Doe',
+   *  Age: 26
+   * }
+   */
+  _headerColumnToKeys: function(data) {
+    var result = {};
+
+    for (let i in data) {
+      result[data[i][0]] = data[i][1];
     }
 
     return result;
