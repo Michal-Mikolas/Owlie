@@ -15,8 +15,8 @@ var owlie_erasmusMatchBuddies = {
    */
   run: function () {
     /*
-    * 1) READ DATA
-    */
+     * 1) READ DATA
+     */
     var buddyRows = Model.sql(
       'SELECT buddy.* FROM ? AS buddy',
       [Model.getData('Buddy')]
@@ -28,8 +28,8 @@ var owlie_erasmusMatchBuddies = {
     );
 
     /*
-    * 2) ASSIGN BUDDIES
-    */
+     * 2) ASSIGN BUDDIES
+     */
     // For each erasmus...
     var i = 0;
     do {
